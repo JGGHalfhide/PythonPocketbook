@@ -46,7 +46,7 @@ def handle_view_button(gui):
 
     # Create Add Transaction button and place it in the top frame
     add_transaction_button = tk.Button(top_frame, text="Add Transaction")
-    add_transaction_button.pack(side=tk.LEFT, padx=10)  # Add padding
+    add_transaction_button.pack(side=tk.LEFT, padx=2)  # Add padding
 
     # Create a dropdown menu for transaction types and place it in the top frame
     options = ['Car Repair/Maintenance', 'Discretionary', 'Gas', 'Groceries', 'Healthcare', 'Home Repair/Maintenance', 'Restaurants']
@@ -55,6 +55,13 @@ def handle_view_button(gui):
 
     dropdown_menu = tk.OptionMenu(top_frame, variable, *options)
     dropdown_menu.pack(side=tk.LEFT, padx=10)  # Add padding
+
+    # Create an Entry widget for entering the transaction amount
+    amount_entry_label = tk.Label(top_frame, text="Amount:  $")
+    amount_entry_label.pack(side=tk.LEFT)  # Add padding
+
+    amount_entry = tk.Entry(top_frame)
+    amount_entry.pack(side=tk.LEFT)  # Add padding
 
     # Create a frame for placing the 'Edit Transactions' button beneath the top frame
     mid_frame = tk.Frame(gui)
