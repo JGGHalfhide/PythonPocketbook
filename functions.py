@@ -1,9 +1,30 @@
 import tkinter as tk
+import sqlite3
 
 
-def handle_new_button():
-    # Define the functionality for the New button (to be implemented later)
-    print("New button clicked")
+def create_database():
+    print("New SQLite database created with transactions table.")  # Testing
+    # Connect to SQLite database (it will create the database file if it doesn't exist)
+    conn = sqlite3.connect('transactions.db')
+
+    # Create a table to store categorized transactions
+    with conn:
+        cursor = conn.cursor()
+
+        # Create transactions table with columns for transaction details
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INTEGER PRIMARY KEY,
+            category TEXT NOT NULL,
+            description TEXT NOT NULL,
+            amount REAL NOT NULL,
+            date TEXT NOT NULL
+        )
+        """)
+
+        # Commit the changes and close the connection
+        conn.commit()
+        # conn.close()
 
 
 def handle_view_button(gui):

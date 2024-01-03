@@ -1,5 +1,5 @@
-import tkinter as tk  # Import the Tkinter module
-from functions import handle_new_button, handle_view_button
+import tkinter as tk
+from functions import create_database, handle_view_button
 
 
 # Create the main application window
@@ -11,7 +11,7 @@ gui.geometry("300x200")
 gui.title("Python Pocketbook")
 
 # Create the New button and pack it into the main window
-new_button = tk.Button(gui, text="New", command=handle_new_button)
+new_button = tk.Button(gui, text="New", command=create_database)
 new_button.pack(pady=20)  # Add some vertical padding
 
 # Create a label with descriptive text for the New button
