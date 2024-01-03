@@ -16,7 +16,7 @@ def handle_view_button(gui):
         widget.destroy()
 
     # Create page description
-    edit_page_label = tk.Label(gui, text="Add/Edit transactions and generate reports.")
+    edit_page_label = tk.Label(gui, text="Add/edit transactions and generate reports.")
     edit_page_label.pack()  # Place the label below the Edit button
 
     # Create a frame for placing widgets side by side
@@ -28,7 +28,7 @@ def handle_view_button(gui):
     add_transaction_button.pack(side=tk.LEFT, padx=10)  # Add padding
 
     # Create a dropdown menu for transaction types and place it in the top frame
-    options = ['gas', 'groceries', 'discretionary']
+    options = ['Car Repair/Maintenance', 'Discretionary', 'Gas', 'Groceries', 'Healthcare', 'Home Repair/Maintenance', 'Restaurants']
     variable = tk.StringVar(gui)
     variable.set(options[0])  # Set the default option
 
@@ -50,4 +50,3 @@ def handle_view_button(gui):
     # Create Visualize Finances button and place it in the bottom frame
     visualize_finances_button = tk.Button(bottom_frame, text="Visualize Finances")
     visualize_finances_button.pack()  # Place the button in the bottom frame
-
