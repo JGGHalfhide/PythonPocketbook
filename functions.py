@@ -38,7 +38,7 @@ def handle_view_button(gui):
         widget.destroy()
 
     # Create page description
-    edit_page_label = tk.Label(gui, text="Add/edit transactions and generate reports.")
+    edit_page_label = tk.Label(gui, text="Add, view, and edit transactions and generate reports.")
     edit_page_label.pack()  # Place the label below the Edit button
 
     # Create a frame for placing widgets side by side
@@ -66,10 +66,10 @@ def handle_view_button(gui):
     mid_frame.pack(pady=20)  # Add some padding
 
     # Create Edit Transactions button and place it in the bottom frame
-    edit_transaction_button = tk.Button(mid_frame, text="Edit Transactions")
-    edit_transaction_button.pack()  # Place the button in the mid frame
+    edit_transaction_button = tk.Button(mid_frame, text="Edit Transactions", command=lambda: handle_edit_button(gui))
+    edit_transaction_button.pack()  # Place the button in the mid-frame
 
-    # Create a frame for placing the 'Visualize Finances' button beneath the mid frame
+    # Create a frame for placing the 'Visualize Finances' button beneath the mid-frame
     bottom_frame = tk.Frame(gui)
     bottom_frame.pack(pady=20)  # Add some padding
 
@@ -88,10 +88,6 @@ def handle_view_button(gui):
     # Attach the 'Add Transaction' function to the button click event
     add_transaction_button = tk.Button(top_frame, text="Add Transaction", command=add_transaction_click)
     add_transaction_button.pack(side=tk.LEFT, padx=2)  # Add padding
-
-    # Create 'View Transactions' button
-    view_transactions_button = tk.Button(gui, text="View Transactions", command=view_transactions_from_database)
-    view_transactions_button.pack(pady=20)  # Place the button beneath the top frame
 
 
 def add_transaction_to_database(category, amount):
@@ -114,6 +110,7 @@ def add_transaction_to_database(category, amount):
         # Commit the changes
         conn.commit()
 
+
 # For testing (remove when done)
 def view_transactions_from_database():
     """Fetch and display transactions from SQLite database"""
@@ -128,3 +125,92 @@ def view_transactions_from_database():
         print("\nTransactions:")
         for row in rows:
             print(row)
+
+
+def handle_edit_button(gui):
+    gui.geometry("700x500")
+
+    # Destroy existing widgets
+    for widget in gui.winfo_children():
+        widget.destroy()
+
+    # Create page description
+    edit_page_label = tk.Label(gui, text="View/Edit transactions.")
+    edit_page_label.pack()
+
+    # Create frame for widgets
+    top_frame = tk.Frame(gui)
+    top_frame.pack(pady=20)
+
+    # Function to fetch categories from SQLite database
+    def fetch_categories_from_database():
+        conn = sqlite3.connect('transactions.db')
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT category FROM transactions")
+            category = [row[0] for row in cursor.fetchall()]
+        return category
+
+    # Fetch categories from database
+    categories = fetch_categories_from_database()
+
+    # Dropdown for categories
+    category_var = tk.StringVar(top_frame)
+    category_var.set(categories[0])
+    category_dropdown = tk.OptionMenu(top_frame, category_var, *categories)
+    category_dropdown.pack(side=tk.LEFT, padx=10)
+
+    # Select button
+    def select_category():
+        selected_category = category_var.get()
+        populate_transactions_listbox(selected_category)
+
+    select_button = tk.Button(top_frame, text="Select", command=select_category)
+    select_button.pack(side=tk.LEFT)
+
+    # Listbox for transactions
+    transactions_listbox = tk.Listbox(width=50)
+    transactions_listbox.pack(pady=20)
+
+    # Frame to hold 'Edit' and 'Remove' buttons
+    button_frame = tk.Frame(gui)
+    button_frame.pack(pady=20)  # Add padding to position it below the Listbox
+
+    # Dummy 'Edit' and 'Remove' buttons
+    edit_button = tk.Button(button_frame, text="Edit", command=edit_transaction)
+    edit_button.pack(side=tk.LEFT, padx=10)
+
+    remove_button = tk.Button(button_frame, text="Remove", command=remove_transaction)
+    remove_button.pack(side=tk.LEFT, padx=10)
+
+    # Hide the button frame initially
+    button_frame.pack_forget()
+
+    # Function to populate transactions based on category
+    def populate_transactions_listbox(category):
+        transactions_listbox.delete(0, tk.END)  # Clear previous items
+        conn = sqlite3.connect('transactions.db')
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT amount, date FROM transactions WHERE category=?", (category,))
+            transactions = ["Amount: ${}, Date: {}".format(row[0], row[1]) for row in cursor.fetchall()]
+
+        for transaction in transactions:
+            transactions_listbox.insert(tk.END, transaction)
+
+            # Bind function to handle selection in the Listbox
+            transactions_listbox.bind('<<ListboxSelect>>', on_select)
+
+    # Function to handle Listbox item selection
+    def on_select(event):
+        # Unhide the 'Edit' and 'Remove' buttons when an item is selected
+        button_frame.pack(side=tk.TOP, pady=20)
+
+
+# Dummy edit and remove functions (you can replace these with actual functionality)
+def edit_transaction():
+    print("Edit button clicked")
+
+
+def remove_transaction():
+    print("Remove button clicked")
