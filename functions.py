@@ -1,11 +1,11 @@
 import tkinter as tk
 import sqlite3
 from datetime import datetime
+import tkinter.messagebox as messagebox
 
 
 def create_database():
-    print("New SQLite database created with transactions table.")  # Testing
-
+    """Create a database when the 'new' button is clicked"""
     # Connect to SQLite database (it will create the database file if it doesn't exist)
     conn = sqlite3.connect('transactions.db')
 
@@ -29,8 +29,7 @@ def create_database():
 
 
 def handle_view_button(gui):
-    """Take user to the view/edit screen to interact with existing budget"""
-    print("Edit button clicked")  # here for testing
+    """Take user to the view/edit screen to interact with existing budget and create widgets for it"""
     gui.geometry("700x500")
 
     # Destroy existing widgets in the window
@@ -77,7 +76,16 @@ def handle_view_button(gui):
     visualize_finances_button = tk.Button(bottom_frame, text="Visualize Finances")
     visualize_finances_button.pack()  # Place the button in the bottom frame
 
+    # Create a frame for placing the 'Back' button
+    back_frame = tk.Frame(gui)
+    back_frame.pack(pady=20)  # Add some padding
+
+    # Create 'Back' button and place it in the back frame
+    back_button = tk.Button(back_frame, text="Back", command=lambda: back_to_home(gui))
+    back_button.pack()  # Place the button in the bottom frame
+
     def add_transaction_click():
+        """Listener for add transaction button to capture values"""
         selected_category = variable.get()  # Get selected category from dropdown menu
         transaction_amount = float(amount_entry.get())  # Get transaction amount from entry box
         add_transaction_to_database(selected_category, transaction_amount)  # Add transaction to database
@@ -111,7 +119,6 @@ def add_transaction_to_database(category, amount):
         conn.commit()
 
 
-# For testing (remove when done)
 def view_transactions_from_database():
     """Fetch and display transactions from SQLite database"""
     # Connect to SQLite database
@@ -128,6 +135,7 @@ def view_transactions_from_database():
 
 
 def handle_edit_button(gui):
+    """Take user to edit screen where they can view and edit transactions"""
     gui.geometry("700x500")
 
     # Destroy existing widgets
@@ -212,5 +220,61 @@ def edit_transaction():
     print("Edit button clicked")
 
 
-def remove_transaction():
-    print("Remove button clicked")
+"""Need to refactor all functions since there is so much nesting going on causing scope issues"""
+def remove_transaction(transactions_listbox, select_category):
+    # Get the selected transaction from the listbox
+    selected_index = transactions_listbox.curselection()  # Get the index of the selected item
+    if not selected_index:  # If no item is selected
+        tk.messagebox.showerror("Error", "Please select a transaction to remove.")
+        return
+
+    # Extract amount and date details from the selected item
+    selected_transaction = transactions_listbox.get(selected_index)
+    amount = selected_transaction.split(",")[0].split(":")[1].strip()[1:]  # Extracting amount value
+    date = selected_transaction.split(",")[1].split(":")[1].strip()  # Extracting date value
+
+    # Connect to the SQLite database
+    conn = sqlite3.connect('transactions.db')
+    with conn:
+        cursor = conn.cursor()
+
+        # Execute SQL command to delete the transaction with the extracted amount and date
+        cursor.execute("DELETE FROM transactions WHERE amount=? AND date=?", (amount, date))
+
+        # Commit the changes
+        conn.commit()
+
+    # Refresh the transactions listbox after deletion
+    select_category()  # This will repopulate the listbox based on the selected category
+
+    # Show a message to inform the user
+    tk.messagebox.showinfo("Success", "Transaction removed successfully.")
+
+
+def back_to_home(gui):
+    # Destroy the current instance of the GUI
+    gui.destroy()
+
+    # Create the main application window
+    gui = tk.Tk()
+    # Set the GUI size
+    gui.geometry("300x200")
+
+    # Set the title of the window
+    gui.title("Python Pocketbook")
+
+    # Create the New button and pack it into the main window
+    new_button = tk.Button(gui, text="New", command=create_database)
+    new_button.pack(pady=20)  # Add some vertical padding
+
+    # Create a label with descriptive text for the New button
+    new_label = tk.Label(gui, text="Create new personal finance plan.")
+    new_label.pack()  # Place the label below the New button
+
+    # Create the Edit button and pack it into the main window
+    edit_button = tk.Button(gui, text="View", command=lambda: handle_view_button(gui))
+    edit_button.pack(pady=20)  # Add some vertical padding
+
+    # Create a label with descriptive text for the Edit button
+    edit_label = tk.Label(gui, text="View/Edit an existing plan.")
+    edit_label.pack()  # Place the label below the Edit button
