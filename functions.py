@@ -2,6 +2,7 @@ import tkinter as tk
 import sqlite3
 from datetime import datetime
 import tkinter.messagebox as messagebox
+import tkinter.simpledialog as simpledialog
 
 
 def create_database():
@@ -86,7 +87,7 @@ def handle_view_button(gui):
     back_frame.pack(pady=20)  # Add some padding
 
     # Create 'Back' button and place it in the back frame
-    back_button = tk.Button(back_frame, text="Back", command=lambda: back_to_home(gui))
+    back_button = tk.Button(back_frame, text="Back", command=lambda: back_to_home_screen(gui))
     back_button.pack()  # Place the button in the bottom frame
 
 
@@ -171,8 +172,8 @@ def handle_edit_button(gui):
     button_frame = tk.Frame(gui)
     button_frame.pack(pady=20)  # Add padding to position it below the Listbox
 
-    # Dummy 'Edit' and 'Remove' buttons
-    edit_button = tk.Button(button_frame, text="Edit", command=edit_transaction)
+    # Create 'Edit' and 'Remove' buttons
+    edit_button = tk.Button(button_frame, text="Edit", command=lambda: edit_transaction(transactions_listbox, category_var, populate_transactions_listbox))
     edit_button.pack(side=tk.LEFT, padx=10)
 
     remove_button = tk.Button(button_frame, text="Remove", command=lambda: remove_transaction(transactions_listbox, category_var, populate_transactions_listbox))
@@ -216,12 +217,45 @@ def select_category(category_var, populate_transactions_listbox):
     populate_transactions_listbox(selected_category)
 
 
-# Dummy edit and remove functions (you can replace these with actual functionality)
-def edit_transaction():
-    print("Edit button clicked")
+def edit_transaction(transactions_listbox, category_var, populate_func):
+    """Edit transaction in database and display updated results"""
+
+    # Get the selected transaction from the listbox
+    selected_index = transactions_listbox.curselection()  # Get the index of the selected item
+    if not selected_index:  # If no item is selected
+        tk.messagebox.showerror("Error", "Please select a transaction to edit.")
+        return
+
+    # Extract amount and date details from the selected item
+    selected_transaction = transactions_listbox.get(selected_index)
+    amount = selected_transaction.split(",")[0].split(":")[1].strip()[1:]  # Extracting amount value
+    date = selected_transaction.split(",")[1].split(":")[1].strip()  # Extracting date value
+
+    # Create a simple dialog to get the new amount from the user
+    new_amount = tk.simpledialog.askfloat("Edit Transaction", "Enter the new amount:", initialvalue=float(amount))
+    if new_amount is None:  # If the user cancels the dialog
+        return
+
+    # Connect to the SQLite database
+    conn = sqlite3.connect('transactions.db')
+    with conn:
+        cursor = conn.cursor()
+
+        # Update the amount in the database for the selected transaction
+        cursor.execute("UPDATE transactions SET amount=? WHERE amount=? AND date=?", (new_amount, amount, date))
+
+        # Commit the changes
+        conn.commit()
+
+    # Show a message to inform the user
+    tk.messagebox.showinfo("Success", "Transaction updated successfully.")
+
+    # Refresh the transactions listbox
+    populate_func(category_var.get())
 
 
 def remove_transaction(transactions_listbox, category_var, populate_func):
+    """Remove transaction from database and display updated results"""
     # Get the selected transaction from the listbox
     selected_index = transactions_listbox.curselection()  # Get the index of the selected item
     if not selected_index:  # If no item is selected
@@ -249,7 +283,6 @@ def remove_transaction(transactions_listbox, category_var, populate_func):
 
     # Refresh the transactions listbox
     populate_func(category_var.get())
-
 
 
 def back_to_home_screen(gui):
