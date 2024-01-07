@@ -60,6 +60,11 @@ def handle_view_button(gui):
     amount_entry = tk.Entry(top_frame)
     amount_entry.pack(side=tk.LEFT)  # Add padding
 
+    # Attach the 'Add Transaction' function to the button click event
+    add_transaction_button = tk.Button(top_frame, text="Add Transaction",
+                                       command=lambda: add_transaction_click(variable, amount_entry))
+    add_transaction_button.pack(side=tk.LEFT, padx=2)  # Add padding
+
     # Create a frame for placing the 'Edit Transactions' button beneath the top frame
     mid_frame = tk.Frame(gui)
     mid_frame.pack(pady=20)  # Add some padding
@@ -84,18 +89,15 @@ def handle_view_button(gui):
     back_button = tk.Button(back_frame, text="Back", command=lambda: back_to_home(gui))
     back_button.pack()  # Place the button in the bottom frame
 
-    def add_transaction_click():
-        """Listener for add transaction button to capture values"""
-        selected_category = variable.get()  # Get selected category from dropdown menu
-        transaction_amount = float(amount_entry.get())  # Get transaction amount from entry box
-        add_transaction_to_database(selected_category, transaction_amount)  # Add transaction to database
 
-        # Clear the entry box after adding the transaction (optional)
-        amount_entry.delete(0, tk.END)
+def add_transaction_click(variable, amount_entry):
+    """Listener for add transaction button to capture values"""
+    selected_category = variable.get()  # Get selected category from dropdown menu
+    transaction_amount = float(amount_entry.get())  # Get transaction amount from entry box
+    add_transaction_to_database(selected_category, transaction_amount)  # Add transaction to database
 
-    # Attach the 'Add Transaction' function to the button click event
-    add_transaction_button = tk.Button(top_frame, text="Add Transaction", command=add_transaction_click)
-    add_transaction_button.pack(side=tk.LEFT, padx=2)  # Add padding
+    # Clear the entry box after adding the transaction (optional)
+    amount_entry.delete(0, tk.END)
 
 
 def add_transaction_to_database(category, amount):
@@ -117,21 +119,6 @@ def add_transaction_to_database(category, amount):
 
         # Commit the changes
         conn.commit()
-
-
-def view_transactions_from_database():
-    """Fetch and display transactions from SQLite database"""
-    # Connect to SQLite database
-    conn = sqlite3.connect('transactions.db')
-
-    with conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM transactions")
-        rows = cursor.fetchall()
-
-        print("\nTransactions:")
-        for row in rows:
-            print(row)
 
 
 def handle_edit_button(gui):
@@ -169,11 +156,8 @@ def handle_edit_button(gui):
     category_dropdown.pack(side=tk.LEFT, padx=10)
 
     # Select button
-    def select_category():
-        selected_category = category_var.get()
-        populate_transactions_listbox(selected_category)
-
-    select_button = tk.Button(top_frame, text="Select", command=select_category)
+    select_button = tk.Button(top_frame, text="Select",
+                              command=lambda: select_category(category_var, populate_transactions_listbox))
     select_button.pack(side=tk.LEFT)
 
     # Listbox for transactions
@@ -188,11 +172,19 @@ def handle_edit_button(gui):
     edit_button = tk.Button(button_frame, text="Edit", command=edit_transaction)
     edit_button.pack(side=tk.LEFT, padx=10)
 
-    remove_button = tk.Button(button_frame, text="Remove", command=remove_transaction)
+    remove_button = tk.Button(button_frame, text="Remove", command=lambda: remove_transaction(transactions_listbox))
     remove_button.pack(side=tk.LEFT, padx=10)
 
     # Hide the button frame initially
     button_frame.pack_forget()
+
+    # Create a frame for placing the 'Back' button
+    back_frame = tk.Frame(gui)
+    back_frame.pack(pady=20)  # Add some padding
+
+    # Create 'Back' button and place it in the back frame
+    back_button = tk.Button(back_frame, text="Back", command=lambda: handle_view_button(gui))
+    back_button.pack()  # Place the button in the bottom frame
 
     # Function to populate transactions based on category
     def populate_transactions_listbox(category):
@@ -215,13 +207,18 @@ def handle_edit_button(gui):
         button_frame.pack(side=tk.TOP, pady=20)
 
 
+# Function to handle user highlighted categories
+def select_category(category_var, populate_transactions_listbox):
+    selected_category = category_var.get()
+    populate_transactions_listbox(selected_category)
+
+
 # Dummy edit and remove functions (you can replace these with actual functionality)
 def edit_transaction():
     print("Edit button clicked")
 
 
-"""Need to refactor all functions since there is so much nesting going on causing scope issues"""
-def remove_transaction(transactions_listbox, select_category):
+def remove_transaction(transactions_listbox):
     # Get the selected transaction from the listbox
     selected_index = transactions_listbox.curselection()  # Get the index of the selected item
     if not selected_index:  # If no item is selected
@@ -244,14 +241,15 @@ def remove_transaction(transactions_listbox, select_category):
         # Commit the changes
         conn.commit()
 
-    # Refresh the transactions listbox after deletion
-    select_category()  # This will repopulate the listbox based on the selected category
-
     # Show a message to inform the user
     tk.messagebox.showinfo("Success", "Transaction removed successfully.")
 
+    # Refresh the transactions listbox
+    populate_transactions_listbox(category_var.get())
 
-def back_to_home(gui):
+
+def back_to_home_screen(gui):
+    """Take user back to home screen"""
     # Destroy the current instance of the GUI
     gui.destroy()
 
@@ -278,3 +276,4 @@ def back_to_home(gui):
     # Create a label with descriptive text for the Edit button
     edit_label = tk.Label(gui, text="View/Edit an existing plan.")
     edit_label.pack()  # Place the label below the Edit button
+
