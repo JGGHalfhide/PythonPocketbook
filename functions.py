@@ -120,6 +120,9 @@ def add_transaction_to_database(category, amount):
         # Commit the changes
         conn.commit()
 
+        # Show a message to inform the user
+        tk.messagebox.showinfo("Success", "Transaction added successfully.")
+
 
 def handle_edit_button(gui):
     """Take user to edit screen where they can view and edit transactions"""
@@ -172,7 +175,7 @@ def handle_edit_button(gui):
     edit_button = tk.Button(button_frame, text="Edit", command=edit_transaction)
     edit_button.pack(side=tk.LEFT, padx=10)
 
-    remove_button = tk.Button(button_frame, text="Remove", command=lambda: remove_transaction(transactions_listbox))
+    remove_button = tk.Button(button_frame, text="Remove", command=lambda: remove_transaction(transactions_listbox, category_var, populate_transactions_listbox))
     remove_button.pack(side=tk.LEFT, padx=10)
 
     # Hide the button frame initially
@@ -218,7 +221,7 @@ def edit_transaction():
     print("Edit button clicked")
 
 
-def remove_transaction(transactions_listbox):
+def remove_transaction(transactions_listbox, category_var, populate_func):
     # Get the selected transaction from the listbox
     selected_index = transactions_listbox.curselection()  # Get the index of the selected item
     if not selected_index:  # If no item is selected
@@ -245,7 +248,8 @@ def remove_transaction(transactions_listbox):
     tk.messagebox.showinfo("Success", "Transaction removed successfully.")
 
     # Refresh the transactions listbox
-    populate_transactions_listbox(category_var.get())
+    populate_func(category_var.get())
+
 
 
 def back_to_home_screen(gui):
