@@ -3,6 +3,8 @@ import sqlite3
 from datetime import datetime
 import tkinter.messagebox as messagebox
 import tkinter.simpledialog as simpledialog
+from tkcalendar import DateEntry
+import matplotlib.pyplot as plt
 
 
 def create_database():
@@ -38,7 +40,7 @@ def handle_view_button(gui):
         widget.destroy()
 
     # Create page description
-    edit_page_label = tk.Label(gui, text="Add, view, and edit transactions and generate reports.")
+    edit_page_label = tk.Label(gui, text="Add/view/edit transactions and generate reports.")
     edit_page_label.pack()  # Place the label below the Edit button
 
     # Create a frame for placing widgets side by side
@@ -70,7 +72,7 @@ def handle_view_button(gui):
     mid_frame = tk.Frame(gui)
     mid_frame.pack(pady=20)  # Add some padding
 
-    # Create Edit Transactions button and place it in the bottom frame
+    # Create Edit Transactions button and place it in the mid-frame
     edit_transaction_button = tk.Button(mid_frame, text="Edit Transactions", command=lambda: handle_edit_button(gui))
     edit_transaction_button.pack()  # Place the button in the mid-frame
 
@@ -79,7 +81,7 @@ def handle_view_button(gui):
     bottom_frame.pack(pady=20)  # Add some padding
 
     # Create Visualize Finances button and place it in the bottom frame
-    visualize_finances_button = tk.Button(bottom_frame, text="Visualize Finances")
+    visualize_finances_button = tk.Button(bottom_frame, text="Visualize Finances", command=lambda: visualize_finances(gui))
     visualize_finances_button.pack()  # Place the button in the bottom frame
 
     # Create a frame for placing the 'Back' button
@@ -160,9 +162,9 @@ def handle_edit_button(gui):
     category_dropdown.pack(side=tk.LEFT, padx=10)
 
     # Select button
-    select_button = tk.Button(top_frame, text="Select",
-                              command=lambda: select_category(category_var, populate_transactions_listbox))
-    select_button.pack(side=tk.LEFT)
+    view_trans_button = tk.Button(top_frame, text="View",
+                                  command=lambda: select_category(category_var, populate_transactions_listbox))
+    view_trans_button.pack(side=tk.LEFT)
 
     # Listbox for transactions
     transactions_listbox = tk.Listbox(width=50)
@@ -173,10 +175,14 @@ def handle_edit_button(gui):
     button_frame.pack(pady=20)  # Add padding to position it below the Listbox
 
     # Create 'Edit' and 'Remove' buttons
-    edit_button = tk.Button(button_frame, text="Edit", command=lambda: edit_transaction(transactions_listbox, category_var, populate_transactions_listbox))
+    edit_button = tk.Button(button_frame, text="Edit",
+                            command=lambda: edit_transaction(transactions_listbox, category_var,
+                                                             populate_transactions_listbox))
     edit_button.pack(side=tk.LEFT, padx=10)
 
-    remove_button = tk.Button(button_frame, text="Remove", command=lambda: remove_transaction(transactions_listbox, category_var, populate_transactions_listbox))
+    remove_button = tk.Button(button_frame, text="Remove",
+                              command=lambda: remove_transaction(transactions_listbox, category_var,
+                                                                 populate_transactions_listbox))
     remove_button.pack(side=tk.LEFT, padx=10)
 
     # Hide the button frame initially
@@ -313,4 +319,68 @@ def back_to_home_screen(gui):
     # Create a label with descriptive text for the Edit button
     edit_label = tk.Label(gui, text="View/Edit an existing plan.")
     edit_label.pack()  # Place the label below the Edit button
+
+
+def visualize_finances(gui):
+    """Take user to the visualize screen to generate charts for transactions"""
+    gui.geometry("700x500")
+
+    # Destroy existing widgets
+    for widget in gui.winfo_children():
+        widget.destroy()
+
+    # Create page description
+    visualize_page_label = tk.Label(gui, text="Generate graphs and charts for transactions. Specify dates to visualize below.")
+    visualize_page_label.pack()
+
+    # Create a frame for date range selection
+    date_frame = tk.Frame(gui)
+    date_frame.pack(pady=20)
+
+    # Date Range Label and Entry Widgets
+    start_date_label = tk.Label(date_frame, text="Start Date:")
+    start_date_label.grid(row=0, column=0, padx=10)
+    start_date_entry = tk.Entry(date_frame)
+    start_date_entry.grid(row=0, column=1, padx=10)
+
+    end_date_label = tk.Label(date_frame, text="End Date:")
+    end_date_label.grid(row=0, column=2, padx=10)
+    end_date_entry = tk.Entry(date_frame)
+    end_date_entry.grid(row=0, column=3, padx=10)
+
+    # Create a frame for the 'Transactions Pie Chart'
+    pie_frame = tk.Frame(gui)
+    pie_frame.pack(pady=20)
+
+    # Function to fetch transaction totals based on date range
+    def fetch_transaction_totals(start_date, end_date):
+        """Fetch transaction totals by category from SQLite database within the specified date range."""
+        conn = sqlite3.connect('transactions.db')
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT category, SUM(amount) FROM transactions WHERE date BETWEEN ? AND ? GROUP BY category", (start_date, end_date))
+            rows = cursor.fetchall()
+        return rows
+
+    # Function to generate pie chart based on selected date range
+    def generate_pie_chart():
+        """Generate pie chart based on transaction totals."""
+        start_date = start_date_entry.get()
+        end_date = end_date_entry.get()
+
+        data = fetch_transaction_totals(start_date, end_date)
+        categories = [row[0] for row in data]
+        amounts = [row[1] for row in data]
+
+        # Plotting
+        plt.figure(figsize=(8, 6))
+        plt.pie(amounts, labels=categories, autopct='%1.1f%%', startangle=140)
+        plt.axis('equal')
+
+        plt.title(f'Transaction Distribution by Category ({start_date} to {end_date})')
+        plt.show()
+
+    # Create Pie Chart button and place it in the pie frame
+    pie_transactions_button = tk.Button(pie_frame, text="Transactions Pie Chart", command=generate_pie_chart)
+    pie_transactions_button.pack()
 
