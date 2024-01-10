@@ -3,7 +3,6 @@ import sqlite3
 from datetime import datetime
 import tkinter.messagebox as messagebox
 import tkinter.simpledialog as simpledialog
-from tkcalendar import DateEntry
 import matplotlib.pyplot as plt
 
 
@@ -321,6 +320,12 @@ def back_to_home_screen(gui):
     edit_label.pack()  # Place the label below the Edit button
 
 
+import sqlite3
+import tkinter as tk
+import matplotlib.pyplot as plt
+from tkinter import ttk
+
+
 def visualize_finances(gui):
     """Take user to the visualize screen to generate charts for transactions"""
     gui.geometry("700x500")
@@ -330,7 +335,8 @@ def visualize_finances(gui):
         widget.destroy()
 
     # Create page description
-    visualize_page_label = tk.Label(gui, text="Generate graphs and charts for transactions. Specify dates to visualize below.")
+    visualize_page_label = tk.Label(gui,
+                                    text="Generate graphs and charts for transactions. Specify dates (YYYY-MM-DD) to visualize below.")
     visualize_page_label.pack()
 
     # Create a frame for date range selection
@@ -348,17 +354,15 @@ def visualize_finances(gui):
     end_date_entry = tk.Entry(date_frame)
     end_date_entry.grid(row=0, column=3, padx=10)
 
-    # Create a frame for the 'Transactions Pie Chart'
-    pie_frame = tk.Frame(gui)
-    pie_frame.pack(pady=20)
-
     # Function to fetch transaction totals based on date range
     def fetch_transaction_totals(start_date, end_date):
         """Fetch transaction totals by category from SQLite database within the specified date range."""
         conn = sqlite3.connect('transactions.db')
         with conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT category, SUM(amount) FROM transactions WHERE date BETWEEN ? AND ? GROUP BY category", (start_date, end_date))
+            cursor.execute(
+                "SELECT category, SUM(amount) FROM transactions WHERE date BETWEEN ? AND ? GROUP BY category",
+                (start_date, end_date))
             rows = cursor.fetchall()
         return rows
 
@@ -380,7 +384,91 @@ def visualize_finances(gui):
         plt.title(f'Transaction Distribution by Category ({start_date} to {end_date})')
         plt.show()
 
+    # Create a frame for the 'Transactions Pie Chart'
+    pie_frame = tk.Frame(gui)
+    pie_frame.pack(pady=20)
+
+    # Label for pie chart button
+    pie_label = tk.Label(pie_frame, text="View pie chart of transactions for given date range")
+    pie_label.pack(pady=10)
+
     # Create Pie Chart button and place it in the pie frame
     pie_transactions_button = tk.Button(pie_frame, text="Transactions Pie Chart", command=generate_pie_chart)
     pie_transactions_button.pack()
+
+    # Function to fetch unique categories from the database
+    def fetch_unique_categories():
+        """Fetch unique categories from SQLite database."""
+        conn = sqlite3.connect('transactions.db')
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT DISTINCT category FROM transactions")
+            rows = cursor.fetchall()
+        return [row[0] for row in rows]  # Extract categories from fetched rows
+
+    # Create a frame for the 'Trends Graph'
+    trends_frame = tk.Frame(gui)
+    trends_frame.pack(pady=20)
+
+    # Label for trends button
+    trends_label = tk.Label(trends_frame, text="View spending trends for specified category and date range")
+    trends_label.pack(pady=10)
+
+    # Function to generate line graph based on selected category and date range
+    def generate_trends_graph():
+        """Generate line graph to visualize transaction trends for the selected category."""
+        start_date = start_date_entry.get()
+        end_date = end_date_entry.get()
+        selected_category = category_var.get()
+
+        # Ensure that a category is selected
+        if not selected_category:
+            tk.messagebox.showerror("Error", "Please select a category.")
+            return
+
+        # Fetch individual transactions for the selected category and date range
+        conn = sqlite3.connect('transactions.db')
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT date, amount FROM transactions WHERE category = ? AND date BETWEEN ? AND ?",
+                           (selected_category, start_date, end_date))
+            rows = cursor.fetchall()
+
+        if not rows:
+            tk.messagebox.showerror("Error",
+                                    f"No transactions found for {selected_category} in the specified date range.")
+            return
+
+        dates = [row[0] for row in rows]  # Extract dates
+        amounts = [row[1] for row in rows]  # Extract amounts
+
+        # Convert dates to a format suitable for plotting, if necessary
+        # (This assumes that the dates are already in a format that matplotlib can interpret)
+        # If the dates are strings, you may need to convert them to a datetime object and then format them as needed.
+
+        # Plotting
+        plt.figure(figsize=(10, 6))
+        plt.plot(dates, amounts, marker='o', linestyle='-')
+        plt.xlabel('Date')
+        plt.ylabel('Amount')
+        plt.title(f'Transaction Trend for {selected_category} ({start_date} to {end_date})')
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+    # Fetch unique categories and update the dropdown widget
+    categories = fetch_unique_categories()
+
+    # If there are no categories, show an error message
+    if not categories:
+        tk.messagebox.showerror("Error", "No categories found in the database.")
+    else:
+        category_var = tk.StringVar()
+        category_dropdown = ttk.Combobox(trends_frame, textvariable=category_var, values=categories)
+        category_dropdown.set("Select Category")
+        category_dropdown.pack(pady=10)
+
+        # Create trends button and place it in the trend frame
+        trends_button = tk.Button(trends_frame, text="View Trends", command=generate_trends_graph)
+        trends_button.pack(pady=10)
 
