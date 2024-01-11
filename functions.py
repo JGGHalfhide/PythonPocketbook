@@ -3,7 +3,9 @@ import sqlite3
 from datetime import datetime
 import tkinter.messagebox as messagebox
 import tkinter.simpledialog as simpledialog
+from tkinter import ttk
 import matplotlib.pyplot as plt
+from PIL import Image, ImageTk
 
 
 def create_database():
@@ -298,7 +300,7 @@ def back_to_home_screen(gui):
     # Create the main application window
     gui = tk.Tk()
     # Set the GUI size
-    gui.geometry("300x200")
+    gui.geometry("700x500")
 
     # Set the title of the window
     gui.title("Python Pocketbook")
@@ -319,11 +321,21 @@ def back_to_home_screen(gui):
     edit_label = tk.Label(gui, text="View/Edit an existing plan.")
     edit_label.pack()  # Place the label below the Edit button
 
+    # Load the image using Pillow
+    image = Image.open("/Users/jonathan/PycharmProjects/PythonPocketbook/venv/images/wallet-svgrepo-com.png")
 
-import sqlite3
-import tkinter as tk
-import matplotlib.pyplot as plt
-from tkinter import ttk
+    # Resize the image with antialiasing
+    image = image.resize((200, 200), Image.ANTIALIAS if hasattr(Image, "ANTIALIAS") else Image.BILINEAR)
+
+    # Convert the Image object into a PhotoImage object
+    logo_image = ImageTk.PhotoImage(image)
+
+    # Create a label to display the image
+    logo_label = tk.Label(gui, image=logo_image)
+    logo_label.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=tk.YES)  # Position at the bottom and fill the space
+
+    # Keep a reference to the image to prevent it from being garbage collected
+    logo_label.image = logo_image
 
 
 def visualize_finances(gui):
