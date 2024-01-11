@@ -294,13 +294,11 @@ def remove_transaction(transactions_listbox, category_var, populate_func):
 
 def back_to_home_screen(gui):
     """Take user back to home screen"""
-    # Destroy the current instance of the GUI
-    gui.destroy()
-
-    # Create the main application window
-    gui = tk.Tk()
-    # Set the GUI size
     gui.geometry("700x500")
+
+    # Destroy existing widgets
+    for widget in gui.winfo_children():
+        widget.destroy()
 
     # Set the title of the window
     gui.title("Python Pocketbook")
