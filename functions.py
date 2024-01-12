@@ -373,6 +373,11 @@ def visualize_finances(gui):
         start_date = start_date_entry.get()
         end_date = end_date_entry.get()
 
+        # Check if start_date or end_date is not specified
+        if not start_date or not end_date:
+            tk.messagebox.showerror("Error", "Please specify both start and end dates.")
+            return
+
         data = fetch_transaction_totals(start_date, end_date)
         categories = [row[0] for row in data]
         amounts = [row[1] for row in data]
