@@ -48,8 +48,8 @@ def handle_view_button(gui):
     top_frame.pack(pady=50)  # Add some padding
 
     # Create a dropdown menu for transaction types and place it in the top frame
-    options = ['Car Repair/Maintenance', 'Discretionary', 'Gas', 'Groceries', 'Healthcare', 'Home Repair/Maintenance',
-               'Restaurants']
+    options = ['Entertainment', 'Food & Dining', 'Groceries', 'Health & Fitness', 'Housing', 'Miscellaneous', 'Shopping', 'Transportation',
+               'Travel', 'Utilities']
     variable = tk.StringVar(gui)
     variable.set(options[0])  # Set the default option
 
