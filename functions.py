@@ -326,7 +326,6 @@ def back_to_home_screen(gui):
     go_button.pack(pady=10)  # Add vertical padding below the image label
 
 
-
 def visualize_finances(gui):
     """Take user to the visualize screen to generate charts for transactions"""
     gui.geometry("700x500")
@@ -354,6 +353,35 @@ def visualize_finances(gui):
     end_date_label.grid(row=0, column=2, padx=10)
     end_date_entry = tk.Entry(date_frame)
     end_date_entry.grid(row=0, column=3, padx=10)
+
+    # Create a frame for the dropdown and functions
+    dropdown_frame = tk.Frame(gui)
+    dropdown_frame.pack(pady=20)
+
+    # Dropdown label
+    dropdown_label = tk.Label(dropdown_frame, text="Select Action:")
+    dropdown_label.grid(row=0, column=0, padx=10)
+
+    # Dropdown options
+    dropdown_options = ['Transactions Pie Chart', 'View Trend', 'Transactions Bar Graph']
+    selected_option = tk.StringVar()
+    dropdown = ttk.Combobox(dropdown_frame, textvariable=selected_option, values=dropdown_options)
+    dropdown.grid(row=0, column=1, padx=10)
+    dropdown.set("Select Action")
+
+    # Function to handle the selected dropdown option
+    def handle_dropdown_selection():
+        selected_action = selected_option.get()
+        if selected_action == 'Transactions Pie Chart':
+            generate_pie_chart()
+        elif selected_action == 'View Trend':
+            generate_trends_graph()
+        elif selected_action == 'Transactions Bar Graph':
+            generate_bar_graph()
+
+    # Create a button to trigger the selected action
+    action_button = tk.Button(dropdown_frame, text="Go", command=handle_dropdown_selection)
+    action_button.grid(row=0, column=2, padx=10)
 
     # Function to fetch transaction totals based on date range
     def fetch_transaction_totals(start_date, end_date):
@@ -390,18 +418,6 @@ def visualize_finances(gui):
         plt.title(f'Transaction Distribution by Category ({start_date} to {end_date})')
         plt.show()
 
-    # Create a frame for the 'Transactions Pie Chart'
-    pie_frame = tk.Frame(gui)
-    pie_frame.pack(pady=20)
-
-    # Label for pie chart button
-    pie_label = tk.Label(pie_frame, text="View pie chart of transactions for given date range")
-    pie_label.pack(pady=10)
-
-    # Create Pie Chart button and place it in the pie frame
-    pie_transactions_button = tk.Button(pie_frame, text="Transactions Pie Chart", command=generate_pie_chart)
-    pie_transactions_button.pack()
-
     # Function to fetch unique categories from the database
     def fetch_unique_categories():
         """Fetch unique categories from SQLite database."""
@@ -417,7 +433,7 @@ def visualize_finances(gui):
     trends_frame.pack(pady=20)
 
     # Label for trends button
-    trends_label = tk.Label(trends_frame, text="View spending trends for specified category and date range")
+    trends_label = tk.Label(trends_frame, text="Select category to view trend for date range")
     trends_label.pack(pady=10)
 
     # Function to generate line graph based on selected category and date range
@@ -448,10 +464,6 @@ def visualize_finances(gui):
         dates = [row[0] for row in rows]  # Extract dates
         amounts = [row[1] for row in rows]  # Extract amounts
 
-        # Convert dates to a format suitable for plotting, if necessary
-        # (This assumes that the dates are already in a format that matplotlib can interpret)
-        # If the dates are strings, you may need to convert them to a datetime object and then format them as needed.
-
         # Plotting
         plt.figure(figsize=(10, 6))
         plt.plot(dates, amounts, marker='o', linestyle='-')
@@ -475,8 +487,33 @@ def visualize_finances(gui):
         category_dropdown.pack(pady=10)
 
         # Create trends button and place it in the trend frame
-        trends_button = tk.Button(trends_frame, text="View Trends", command=generate_trends_graph)
+        trends_button = tk.Button(trends_frame, text="View Trend", command=generate_trends_graph)
         trends_button.pack(pady=10)
+
+    # Function to generate bar graph based on selected date range
+    def generate_bar_graph():
+        """Generate bar graph to visualize transaction totals for each category in the selected date range."""
+        start_date = start_date_entry.get()
+        end_date = end_date_entry.get()
+
+        # Check if start_date or end_date is not specified
+        if not start_date or not end_date:
+            tk.messagebox.showerror("Error", "Please specify both start and end dates.")
+            return
+
+        data = fetch_transaction_totals(start_date, end_date)
+        categories = [row[0] for row in data]
+        amounts = [row[1] for row in data]
+
+        # Plotting
+        plt.figure(figsize=(10, 6))
+        plt.bar(categories, amounts, color='blue')
+        plt.xlabel('Category')
+        plt.ylabel('Total Amount')
+        plt.title(f'Transaction Totals by Category ({start_date} to {end_date})')
+        plt.xticks(rotation=45, ha='right')  # Rotate category labels for better visibility
+        plt.tight_layout()
+        plt.show()
 
     # Create a frame for placing the 'Back' button
     back_frame = tk.Frame(gui)
