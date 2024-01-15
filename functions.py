@@ -41,7 +41,7 @@ def handle_view_button(gui):
 
     # Create page description
     edit_page_label = tk.Label(gui, text="Add/view/edit transactions and generate reports.")
-    edit_page_label.pack()  # Place the label below the Edit button
+    edit_page_label.pack(pady=20)  # Place the label below the Edit button
 
     # Create a frame for placing widgets side by side
     top_frame = tk.Frame(gui)
@@ -137,7 +137,7 @@ def handle_edit_button(gui):
 
     # Create page description
     edit_page_label = tk.Label(gui, text="View/Edit transactions.")
-    edit_page_label.pack()
+    edit_page_label.pack(pady=20)
 
     # Create frame for widgets
     top_frame = tk.Frame(gui)
@@ -336,8 +336,9 @@ def visualize_finances(gui):
 
     # Create page description
     visualize_page_label = tk.Label(gui,
-                                    text="Generate graphs and charts for transactions. Specify dates (YYYY-MM-DD) to visualize below.")
-    visualize_page_label.pack()
+                                    text="Generate graphs and charts for transactions. Specify dates (YYYY-MM-DD) to "
+                                         "visualize below.")
+    visualize_page_label.pack(pady=20)
 
     # Create a frame for date range selection
     date_frame = tk.Frame(gui)
@@ -363,11 +364,50 @@ def visualize_finances(gui):
     dropdown_label.grid(row=0, column=0, padx=10)
 
     # Dropdown options
-    dropdown_options = ['Transactions Pie Chart', 'View Trend', 'Transactions Bar Graph']
+    dropdown_options = ['Display Transaction Totals', 'Transactions Pie Chart', 'View Trend', 'Transactions Bar Graph']
     selected_option = tk.StringVar()
     dropdown = ttk.Combobox(dropdown_frame, textvariable=selected_option, values=dropdown_options)
-    dropdown.grid(row=0, column=1, padx=10)
+    dropdown.grid(row=0, column=1, padx=20)
     dropdown.set("Select Action")
+
+    # Function to display transaction totals based on date range
+    def display_transaction_totals():
+        start_date = start_date_entry.get()
+        end_date = end_date_entry.get()
+
+        # Check if start_date or end_date is not specified
+        if not start_date or not end_date:
+            tk.messagebox.showerror("Error", "Please specify both start and end dates.")
+            return
+
+        data = fetch_transaction_totals(start_date, end_date)
+
+        # Create a new window for displaying the totals in a table
+        totals_window = tk.Toplevel(gui)
+        totals_window.title("Transaction Totals by Category")
+        totals_window.geometry("400x300")
+
+        # Create a treeview for displaying the table
+        tree = ttk.Treeview(totals_window)
+        tree["columns"] = ("Category", "Total Amount")
+        tree.column("#0", width=0, stretch=tk.NO)
+        tree.column("Category", anchor=tk.CENTER, width=150)
+        tree.column("Total Amount", anchor=tk.CENTER, width=150)
+
+        tree.heading("#0", text="", anchor=tk.CENTER)
+        tree.heading("Category", text="Category", anchor=tk.CENTER)
+        tree.heading("Total Amount", text="Total Amount", anchor=tk.CENTER)
+
+        # Insert data into the treeview
+        total_sum = 0
+        for row in data:
+            tree.insert("", tk.END, values=row)
+            total_sum += row[1]
+
+        # Add a total line at the bottom
+        tree.insert("", tk.END, values=("Total", total_sum))
+
+        tree.pack(expand=True, fill=tk.BOTH)
 
     # Function to handle the selected dropdown option
     def handle_dropdown_selection():
@@ -378,6 +418,8 @@ def visualize_finances(gui):
             generate_trends_graph()
         elif selected_action == 'Transactions Bar Graph':
             generate_bar_graph()
+        elif selected_action == 'Display Transaction Totals':
+            display_transaction_totals()
 
     # Create a button to trigger the selected action
     action_button = tk.Button(dropdown_frame, text="Go", command=handle_dropdown_selection)
@@ -411,11 +453,14 @@ def visualize_finances(gui):
         amounts = [row[1] for row in data]
 
         # Plotting
-        plt.figure(figsize=(8, 6))
-        plt.pie(amounts, labels=categories, autopct='%1.1f%%', startangle=140)
+        plt.figure(figsize=(10, 8))  # Increase figure size
+        explode = (0.1,) * len(categories)  # Explode all slices (adjust as needed)
+        plt.pie(amounts, labels=categories, autopct='%1.1f%%', startangle=140, explode=explode)
+
+        plt.title(f'Transaction Distribution by Category ({start_date} to {end_date})',
+                  fontsize=16)  # Increase title font size
         plt.axis('equal')
 
-        plt.title(f'Transaction Distribution by Category ({start_date} to {end_date})')
         plt.show()
 
     # Function to fetch unique categories from the database
