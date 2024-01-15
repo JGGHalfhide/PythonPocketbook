@@ -360,15 +360,23 @@ def visualize_finances(gui):
     dropdown_frame.pack(pady=20)
 
     # Dropdown label
-    dropdown_label = tk.Label(dropdown_frame, text="Select Action:")
+    dropdown_label = tk.Label(dropdown_frame, text="Select Display:")
     dropdown_label.grid(row=0, column=0, padx=10)
 
     # Dropdown options
-    dropdown_options = ['Display Transaction Totals', 'Transactions Pie Chart', 'View Trend', 'Transactions Bar Graph']
+    dropdown_options = ['Transactions Bar Graph', 'Transactions Pie Chart', 'Transaction Totals', 'Trend (Select Category)']
     selected_option = tk.StringVar()
     dropdown = ttk.Combobox(dropdown_frame, textvariable=selected_option, values=dropdown_options)
     dropdown.grid(row=0, column=1, padx=20)
     dropdown.set("Select Action")
+
+    # Create a frame for the 'Trends Graph' category
+    trends_cat_frame = tk.Frame(gui)
+    trends_cat_frame.pack_forget()
+
+    # Label for trends button
+    trends_label = tk.Label(trends_cat_frame, text="Select category")
+    trends_label.grid(row=0, column=0, padx=10)
 
     # Function to display transaction totals based on date range
     def display_transaction_totals():
@@ -384,7 +392,7 @@ def visualize_finances(gui):
 
         # Create a new window for displaying the totals in a table
         totals_window = tk.Toplevel(gui)
-        totals_window.title("Transaction Totals by Category")
+        totals_window.title("Transaction Totals by Category for Date Range")
         totals_window.geometry("400x300")
 
         # Create a treeview for displaying the table
@@ -412,18 +420,36 @@ def visualize_finances(gui):
     # Function to handle the selected dropdown option
     def handle_dropdown_selection():
         selected_action = selected_option.get()
+
+        # Hide the trends_cat_frame by default
+        trends_cat_frame.pack_forget()
+
         if selected_action == 'Transactions Pie Chart':
             generate_pie_chart()
-        elif selected_action == 'View Trend':
+        elif selected_action == 'Trend (Select Category)':
             generate_trends_graph()
         elif selected_action == 'Transactions Bar Graph':
             generate_bar_graph()
-        elif selected_action == 'Display Transaction Totals':
+        elif selected_action == 'Transaction Totals':
             display_transaction_totals()
+            trends_cat_frame.pack(pady=10)
 
     # Create a button to trigger the selected action
-    action_button = tk.Button(dropdown_frame, text="Go", command=handle_dropdown_selection)
+    action_button = tk.Button(dropdown_frame, text="View", command=handle_dropdown_selection)
     action_button.grid(row=0, column=2, padx=10)
+
+    # Function to handle the focus event on the dropdown
+    def handle_dropdown_focus(event):
+        selected_action = selected_option.get()
+
+        # Unhide the trends_cat_frame when Transaction Trend is selected
+        if selected_action == 'Trend (Select Category)':
+            trends_cat_frame.pack(pady=10)
+        else:
+            trends_cat_frame.pack_forget()
+
+    # Bind the focus event to the dropdown
+    dropdown.bind('<FocusIn>', handle_dropdown_focus)
 
     # Function to fetch transaction totals based on date range
     def fetch_transaction_totals(start_date, end_date):
@@ -473,14 +499,6 @@ def visualize_finances(gui):
             rows = cursor.fetchall()
         return [row[0] for row in rows]  # Extract categories from fetched rows
 
-    # Create a frame for the 'Trends Graph'
-    trends_frame = tk.Frame(gui)
-    trends_frame.pack(pady=20)
-
-    # Label for trends button
-    trends_label = tk.Label(trends_frame, text="Select category to view trend for date range")
-    trends_label.pack(pady=10)
-
     # Function to generate line graph based on selected category and date range
     def generate_trends_graph():
         """Generate line graph to visualize transaction trends for the selected category."""
@@ -527,13 +545,9 @@ def visualize_finances(gui):
         tk.messagebox.showerror("Error", "No categories found in the database.")
     else:
         category_var = tk.StringVar()
-        category_dropdown = ttk.Combobox(trends_frame, textvariable=category_var, values=categories)
+        category_dropdown = ttk.Combobox(trends_cat_frame, textvariable=category_var, values=categories)
         category_dropdown.set("Select Category")
-        category_dropdown.pack(pady=10)
-
-        # Create trends button and place it in the trend frame
-        trends_button = tk.Button(trends_frame, text="View Trend", command=generate_trends_graph)
-        trends_button.pack(pady=10)
+        category_dropdown.grid(row=0, column=1, padx=20)
 
     # Function to generate bar graph based on selected date range
     def generate_bar_graph():
