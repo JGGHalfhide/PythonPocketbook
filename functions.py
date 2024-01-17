@@ -143,6 +143,14 @@ def handle_edit_button(gui):
     top_frame = tk.Frame(gui)
     top_frame.pack(pady=20)
 
+    # Create a frame for placing the 'Back' button
+    back_frame = tk.Frame(gui)
+    back_frame.pack(side=tk.BOTTOM, anchor=tk.S, pady=30)  # Add some padding
+
+    # Create 'Back' button and place it in the back frame
+    back_button = tk.Button(back_frame, text="Back", command=lambda: handle_view_button(gui))
+    back_button.pack()
+
     # Function to fetch categories from SQLite database
     def fetch_categories_from_database():
         conn = sqlite3.connect('transactions.db')
@@ -187,14 +195,6 @@ def handle_edit_button(gui):
 
     # Hide the button frame initially
     button_frame.pack_forget()
-
-    # Create a frame for placing the 'Back' button
-    back_frame = tk.Frame(gui)
-    back_frame.pack(pady=20)  # Add some padding
-
-    # Create 'Back' button and place it in the back frame
-    back_button = tk.Button(back_frame, text="Back", command=lambda: handle_view_button(gui))
-    back_button.pack()  # Place the button in the bottom frame
 
     # Function to populate transactions based on category
     def populate_transactions_listbox(category):
