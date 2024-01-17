@@ -43,11 +43,11 @@ Python Pocketbook is a simple financial management application designed to help 
 
 ## Screenshots
 
-![Home Screen](venv/screenshots/homescreen.jpg)
+![Home Screen](screenshots/homescreen.jpg)
 
-![Visualize Finances1](venv/screenshots/dropdown.jpg)
-![Visualize Finances2](venv/screenshots/piechart.jpg)
-![Visualize Finances3](venv/screenshots/bargraph.jpg)
+![Visualize Finances1](screenshots/dropdown.jpg)
+![Visualize Finances2](screenshots/piechart.jpg)
+![Visualize Finances3](screenshots/bargraph.jpg)
 
 ## Contributions
 
